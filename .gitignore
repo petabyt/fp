@@ -1,0 +1,3 @@
+*.o
+fp
+compile_commands.json
