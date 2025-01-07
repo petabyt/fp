@@ -1,3 +1,4 @@
+// Copyright 2025 Daniel C
 #include <stdio.h>
 #include <string.h>
 #include <libxml/parser.h>
@@ -83,16 +84,16 @@ static int parse_prop(struct Context *ctx, const char *key, const char *value) {
 		
 	} else if (!strcmp(key, "RotationAngle")) {
 		if (value == NULL) return -1;
-		ctx->fp->RotationAngle = strtoul(value, NULL, 0);
+		ctx->fp->RotationAngle = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "BlackImageTone")) {
 		if (value == NULL) return -1;
-		ctx->fp->BlackImageTone = strtoul(value, NULL, 0);
+		ctx->fp->BlackImageTone = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "MonochromaticColor_RG")) {
 		if (value == NULL) return -1;
-		ctx->fp->MonochromaticColor_RG = strtoul(value, NULL, 0);
+		ctx->fp->MonochromaticColor_RG = (int)strtoul(value, NULL, 0); // TODO Was gonna do sometyhing here
 	} else if (!strcmp(key, "MonochromaticColor_RG")) {
 		if (value == NULL) return -1;
-		ctx->fp->MonochromaticColor_RG = strtoul(value, NULL, 0);
+		ctx->fp->MonochromaticColor_RG = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "GrainEffect")) {
 		if (value == NULL) return -1;
 		return parse_grain_effect(ctx, value, &ctx->fp->GrainEffect);
