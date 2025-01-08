@@ -21,6 +21,11 @@ enum FujiImageQuality {
 	FP_NORMAL = 0x3,
 };
 
+enum FujiExposureBias {
+	FP_EXPO_BIAS_P0P67 = 1,
+	FP_EXPO_BIAS_P0P33,
+};
+
 enum FujiPushPullProcessing {
 	FP_PLUS_3_EV = 3000,
 	FP_PLUS_2_2_3_EV = 0xa6b,
@@ -65,7 +70,8 @@ enum FujiRange {
 	FP_ZERO = 0,
 	FP_MIN_1 = (int)0xfffffff6,
 	FP_MIN_2 = (int)0xffffffec,
-	FP_MIN_4 = (int)0xffffffd8
+	FP_MIN_3 = (int)0xffffffe1,
+	FP_MIN_4 = (int)0xffffffd8,
 };
 
 
@@ -83,6 +89,12 @@ enum FujiGrainEffect {
 	FP_GRAIN_OFF = 1,
 	FP_GRAIN_WEAK = 0x2,
 	FP_GRAIN_STRONG = 0x3,
+};
+
+enum FujiChromeEffect {
+	FP_CHROME_OFF = 0x1,
+	FP_CHROME_WEAK = 0x2,
+	FP_CHROME_STRONG = 0x3,
 };
 
 enum FujiGrainEffectSize {
@@ -142,7 +154,7 @@ struct FujiFP1 {
 	int Clarity;
 	int LensModulationOpt;
 	int ColorSpace;
-	enum FujiBool HDRPresent;
+	enum FujiBool HDR;
 };
 
 struct __attribute__((packed)) FujiBinaryProfile {

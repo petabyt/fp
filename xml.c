@@ -10,22 +10,17 @@ struct Context {
 };
 
 const char *eval_iop_code(uint32_t code) {
+	// ???
 	switch (code) {
 	case 0xFF159501:
 		return "X Processor 4";
 	}
-	// TODO
 	return "???";
 }
 
 struct FujiLookup {
 	char *key;
 	uint32_t value;
-};
-
-struct FujiLookup fp_on_off[] = {
-	{"ON", FP_ON},
-	{"OFF", FP_OFF},
 };
 
 static int validate_lookup(struct Context *ctx, const char *str, void *out, struct FujiLookup *tbl, size_t tbl_size) {
@@ -39,6 +34,10 @@ static int validate_lookup(struct Context *ctx, const char *str, void *out, stru
 	}
 	return -1;
 }
+struct FujiLookup fp_on_off[] = {
+	{"ON", FP_ON},
+	{"OFF", FP_OFF},
+};
 struct FujiLookup fp_bool[] = {
 	{"TRUE", FP_TRUE},
 	{"FALSE", FP_FALSE},
@@ -48,6 +47,11 @@ struct FujiLookup fp_grain_effect[] = {
 	{"WEAK", FP_GRAIN_WEAK},
 	{"STRONG", FP_GRAIN_STRONG},
 };
+struct FujiLookup fp_chrome_effect[] = {
+	{"OFF", FP_CHROME_OFF},
+	{"WEAK", FP_CHROME_WEAK},
+	{"STRONG", FP_CHROME_STRONG},
+};
 struct FujiLookup fp_file_type[] = {
 	{"JPG", FP_JPG},
 };
@@ -56,6 +60,44 @@ struct FujiLookup fp_grain_effect_size[] = {
 };
 struct FujiLookup fp_image_size[] = {
 	{"L3x2", FP_L3x2},
+};
+struct FujiLookup fp_image_quality[] = {
+	{"Fine", FP_FINE},
+};
+struct FujiLookup fp_exposure_bias[] = {
+	{"0", 0},
+	{"P0P67", 1},
+	{"P0P33", 2}, // ????
+};
+struct FujiLookup fp_white_balance[] = {
+	{"AsShot", FP_WB_AsShot},
+	{"INVALID", 1},
+	{"Auto", FP_WB_Auto},
+	{"Temperature", FP_WB_Temperature},
+	{"Daylight", FP_WB_Daylight},
+	{"FLight1", 123}, // ???
+};
+struct FujiLookup fp_color_temp[] = {
+	{"0K", 0},
+	{"3200K", 3200},
+	{"5900K", 5900},
+	{"8300K", 8300},
+	{"10000K", 10000},
+};
+struct FujiLookup fp_range[] = {
+	{"4", FP_PLUS_4},
+	{"3", FP_PLUS_3},
+	{"2", FP_PLUS_2},
+	{"1", FP_PLUS_1},
+	{"0", FP_ZERO},
+	{"-1", FP_MIN_1},
+	{"-2", FP_MIN_2},
+	{"-3", FP_MIN_3},
+	{"-4", FP_MIN_4},
+};
+struct FujiLookup fp_color_space[] = {
+	{"sRGB", 1},
+	// TODO
 };
 
 static int parse_prop(struct Context *ctx, const char *key, const char *value) {
@@ -72,19 +114,64 @@ static int parse_prop(struct Context *ctx, const char *key, const char *value) {
 		return validate_lookup(ctx, value, &ctx->fp->FileType, fp_file_type, sizeof(fp_file_type));
 	} else if (!strcmp(key, "ImageSize")) {
 		return validate_lookup(ctx, value, &ctx->fp->ImageSize, fp_image_size, sizeof(fp_image_size));
+	} else if (!strcmp(key, "ImageQuality")) {
+		return validate_lookup(ctx, value, &ctx->fp->ImageQuality, fp_image_quality, sizeof(fp_image_quality));
+	} else if (!strcmp(key, "ExposureBias")) {
+		return validate_lookup(ctx, value, &ctx->fp->ExposureBias, fp_exposure_bias, sizeof(fp_exposure_bias));
+	} else if (!strcmp(key, "ChromeEffect")) {
+		return validate_lookup(ctx, value, &ctx->fp->ChromeEffect, fp_chrome_effect, sizeof(fp_chrome_effect));
+	} else if (!strcmp(key, "WhiteBalance")) {
+		return validate_lookup(ctx, value, &ctx->fp->WhiteBalance, fp_white_balance, sizeof(fp_white_balance));
+	} else if (!strcmp(key, "WBColorTemp")) {
+		return validate_lookup(ctx, value, &ctx->fp->WBColorTemp, fp_color_temp, sizeof(fp_color_temp));
+	} else if (!strcmp(key, "WBShiftR")) {
+		if (value == NULL) return -1;
+		int val = (int)strtoul(value, NULL, 0);
+		if (!(val >= -10 && val <= 10)) return -1;
+		ctx->fp->WBShiftR = val;
+	} else if (!strcmp(key, "WBShiftB")) {
+		if (value == NULL) return -1;
+		int val = (int)strtoul(value, NULL, 0);
+		if (!(val >= -10 && val <= 10)) return -1;
+		ctx->fp->WBShiftR = val;
+	} else if (!strcmp(key, "HighlightTone")) {
+		return validate_lookup(ctx, value, &ctx->fp->Color, fp_range, sizeof(fp_range));
+	} else if (!strcmp(key, "ShadowTone")) {
+		return validate_lookup(ctx, value, &ctx->fp->Color, fp_range, sizeof(fp_range));
+	} else if (!strcmp(key, "Color")) {
+		return validate_lookup(ctx, value, &ctx->fp->Color, fp_range, sizeof(fp_range));
+	} else if (!strcmp(key, "Sharpness")) {
+		return validate_lookup(ctx, value, &ctx->fp->Sharpness, fp_range, sizeof(fp_range));
+	} else if (!strcmp(key, "NoisReduction")) {
+		return validate_lookup(ctx, value, &ctx->fp->NoisReduction, fp_range, sizeof(fp_range));
+	} else if (!strcmp(key, "Clarity")) {
+		return validate_lookup(ctx, value, &ctx->fp->Clarity, fp_range, sizeof(fp_range));
 	} else if (!strcmp(key, "TetherRAWConditonCode")) {
-
+		// TODO
 	} else if (!strcmp(key, "SourceFileName")) {
-
+		// TODO
 	} else if (!strcmp(key, "Fileerror")) {
-
+		// TODO
 	} else if (!strcmp(key, "ShootingCondition")) {
-		
+		// TODO
 	} else if (!strcmp(key, "FilmSimulation")) {
-		
+		// TODO
 	} else if (!strcmp(key, "RotationAngle")) {
 		if (value == NULL) return -1;
 		ctx->fp->RotationAngle = (int)strtoul(value, NULL, 0);
+	} else if (!strcmp(key, "DynamicRange")) {
+		if (value == NULL) return -1;
+		ctx->fp->DynamicRange = (int)strtoul(value, NULL, 0);
+		if (!(ctx->fp->DynamicRange >= 0 && ctx->fp->DynamicRange <= 100)) {
+			return -1;
+		}
+	} else if (!strcmp(key, "WideDRange")) {
+		if (value == NULL) return -1;
+		uint32_t v = (int)strtoul(value, NULL, 0);
+		if (!(v >= 0 && v <= 100)) {
+			return -1;
+		}
+		ctx->fp->WideDRange = v;
 	} else if (!strcmp(key, "BlackImageTone")) {
 		if (value == NULL) return -1;
 		ctx->fp->BlackImageTone = (int)strtoul(value, NULL, 0);
@@ -99,8 +186,19 @@ static int parse_prop(struct Context *ctx, const char *key, const char *value) {
 	} else if (!strcmp(key, "GrainEffectSize")) {
 		return validate_lookup(ctx, value, &ctx->fp->GrainEffectSize, fp_grain_effect_size, sizeof(fp_grain_effect_size));
 	} else if (!strcmp(key, "ColorChromeBlue")) {
+		// TODO NULL, or "WEAK"
+	} else if (!strcmp(key, "HDR")) {
 		if (value != NULL) return -1;
-		ctx->fp->ColorChromeBlue = FP_ON;
+		ctx->fp->HDR = FP_ON;
+	} else if (!strcmp(key, "SmoothSkinEffect")) {
+		if (value != NULL) return -1;
+		ctx->fp->SmoothSkinEffect = FP_ON;
+	} else if (!strcmp(key, "WBShootCond")) {
+		return validate_lookup(ctx, value, &ctx->fp->WBShootCond, fp_on_off, sizeof(fp_on_off));
+	} else if (!strcmp(key, "LensModulationOpt")) {
+		return validate_lookup(ctx, value, &ctx->fp->WBShootCond, fp_on_off, sizeof(fp_on_off));
+	} else if (!strcmp(key, "ColorSpace")) {
+		return validate_lookup(ctx, value, &ctx->fp->ColorSpace, fp_color_space, sizeof(fp_color_space));
 	} else {
 		printf("TODO: %s\n", key);
 		return -1;
@@ -126,7 +224,10 @@ static int parse_prop_group(struct Context *ctx, xmlNode *node) {
 		if (cur == NULL) return -1;
 
 		int rc = parse_prop(ctx, name, value);
-		if (rc) return rc;
+		if (rc) {
+			printf("Error parsing prop '%s' = '%s'\n", name, value);
+			return rc;
+		}
 		
 		if (cur->children) {
 			xmlNode *tags = cur->children;
