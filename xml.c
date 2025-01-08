@@ -3,7 +3,7 @@
 #include <string.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include "fp1.h"
+#include "fp.h"
 
 struct Context {
 	struct FujiFP1 *fp;
@@ -18,60 +18,60 @@ const char *eval_iop_code(uint32_t code) {
 	return "???";
 }
 
-static int parse_on_off(struct Context *ctx, const char *str, enum FujiOnOff *out) {
-	if (!strcmp(str, "ON")) {
-		*out = FP_ON;
-	} else if (!strcmp(str, "OFF")) {
-		*out = FP_OFF;
-	} else {
-		return -1;
-	}
-	return 0;
-}
+struct FujiLookup {
+	char *key;
+	uint32_t value;
+};
 
-static int parse_bool(struct Context *ctx, const char *str, enum FujiBool *out) {
-	if (!strcmp(str, "TRUE")) {
-		*out = FP_TRUE;
-	} else if (!strcmp(str, "TRUE")) {
-		*out = FP_FALSE;
-	} else {
-		return -1;
-	}
-	return 0;
-}
+struct FujiLookup fp_on_off[] = {
+	{"ON", FP_ON},
+	{"OFF", FP_OFF},
+};
 
-static int parse_grain_effect(struct Context *ctx, const char *str, enum FujiGrainEffect *out) {
-	if (!strcmp(str, "OFF")) {
-		*out = FP_GRAIN_OFF;
-	} else if (!strcmp(str, "WEAK")) {
-		*out = FP_GRAIN_WEAK;
-	} else if (!strcmp(str, "STRONG")) {
-		*out = FP_GRAIN_STRONG;
-	} else {
-		return -1;
+static int validate_lookup(struct Context *ctx, const char *str, void *out, struct FujiLookup *tbl, size_t tbl_size) {
+	uint32_t *out_u32 = out;
+	int n = tbl_size / sizeof(struct FujiLookup);
+	for (int i = 0; i < n; i++) {
+		if (!strcmp(str, tbl[i].key)) {
+			(*out_u32) = tbl[i].value;
+			return 0;
+		}
 	}
-	return 0;
+	return -1;
 }
-
-static int parse_grain_effect_size(struct Context *ctx, const char *str, enum FujiGrainEffectSize *out) {
-	if (!strcmp(str, "SMALL")) {
-		*out = FP_GRAIN_SIZE_SMALL;
-	} else {
-		return -1;
-	}
-	return 0;
-}
+struct FujiLookup fp_bool[] = {
+	{"TRUE", FP_TRUE},
+	{"FALSE", FP_FALSE},
+};
+struct FujiLookup fp_grain_effect[] = {
+	{"OFF", FP_GRAIN_OFF},
+	{"WEAK", FP_GRAIN_WEAK},
+	{"STRONG", FP_GRAIN_STRONG},
+};
+struct FujiLookup fp_file_type[] = {
+	{"JPG", FP_JPG},
+};
+struct FujiLookup fp_grain_effect_size[] = {
+	{"SMALL", FP_GRAIN_SIZE_SMALL},
+};
+struct FujiLookup fp_image_size[] = {
+	{"L3x2", FP_L3x2},
+};
 
 static int parse_prop(struct Context *ctx, const char *key, const char *value) {
 	if (!strcmp(key, "SerialNumber")) {
 	} else if (!strcmp(key, "Editable")) {
-		return parse_bool(ctx, value, &ctx->fp->Editable);
+		return validate_lookup(ctx, value, &ctx->fp->Editable, fp_bool, sizeof(fp_bool));
 	} else if (!strcmp(key, "IOPCode")) {
 		if (value == NULL) return -1;
 		if (strlen(value) != 8) return -1;
 		ctx->fp->IOPCode = strtoul(value, NULL, 16);
 	} else if (!strcmp(key, "StructVer")) {
 		
+	} else if (!strcmp(key, "FileType")) {
+		return validate_lookup(ctx, value, &ctx->fp->FileType, fp_file_type, sizeof(fp_file_type));
+	} else if (!strcmp(key, "ImageSize")) {
+		return validate_lookup(ctx, value, &ctx->fp->ImageSize, fp_image_size, sizeof(fp_image_size));
 	} else if (!strcmp(key, "TetherRAWConditonCode")) {
 
 	} else if (!strcmp(key, "SourceFileName")) {
@@ -95,11 +95,9 @@ static int parse_prop(struct Context *ctx, const char *key, const char *value) {
 		if (value == NULL) return -1;
 		ctx->fp->MonochromaticColor_RG = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "GrainEffect")) {
-		if (value == NULL) return -1;
-		return parse_grain_effect(ctx, value, &ctx->fp->GrainEffect);
+		return validate_lookup(ctx, value, &ctx->fp->GrainEffect, fp_grain_effect, sizeof(fp_grain_effect));
 	} else if (!strcmp(key, "GrainEffectSize")) {
-		if (value == NULL) return -1;
-		return parse_grain_effect_size(ctx, value, &ctx->fp->GrainEffectSize);
+		return validate_lookup(ctx, value, &ctx->fp->GrainEffectSize, fp_grain_effect_size, sizeof(fp_grain_effect_size));
 	} else if (!strcmp(key, "ColorChromeBlue")) {
 		if (value != NULL) return -1;
 		ctx->fp->ColorChromeBlue = FP_ON;
@@ -141,8 +139,8 @@ static int parse_prop_group(struct Context *ctx, xmlNode *node) {
 	return 0;
 }
 
-int main(int argc, char **argv) {
-	xmlDoc *doc = xmlReadFile("test/Street.FP1", NULL, 0);
+int fp_parse_fp1(const char *path, struct FujiFP1 *fp1) {
+	xmlDoc *doc = xmlReadFile(path, NULL, 0);
 	if (doc == NULL) {
 		fprintf(stderr, "Could not parse file: %s\n", "");
 		return 1;
@@ -166,14 +164,14 @@ int main(int argc, char **argv) {
 
 	xmlNode *prop_group = group->children->next;
 
-	struct FujiFP1 fp1;
 	struct Context ctx;
-	ctx.fp = &fp1;
+	memset(fp1, 0, sizeof(struct FujiFP1));
+	ctx.fp = fp1;
 
 	int rc = parse_prop_group(&ctx, prop_group);
 	if (rc) return rc;
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
-	return 0;
+	return 0;	
 }
