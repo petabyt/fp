@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 enum FujiFileType {
@@ -52,15 +53,6 @@ enum FujiSim {
 	FP_MonochromeG = 0x9,
 	FP_Sepia = 0xa,
 };
-
-//#define FP_PLUS_4 40
-//#define FP_PLUS_3 30
-//#define FP_PLUS_2 20
-//#define FP_PLUS_1 10
-//#define FP_ZERO 0
-//#define FP_MIN_1 0xfffffff6
-//#define FP_MIN_2 0xffffffec
-//#define FP_MIN_4 0xffffffd8
 
 enum FujiRange {
 	FP_PLUS_4 = 40,
@@ -158,13 +150,21 @@ struct FujiFP1 {
 };
 
 struct __attribute__((packed)) FujiBinaryProfile {
-	uint8_t n_props;
-	char iop_codes[0x200];
+	// So far this has been observed as 0x17 or 0x1d and seems to represent the number of properties following iop_codes.
+	// The problem is, the camera appears to always send this structure as exactly 601 bytes regardless of n_props.
+	// In that case, one would expect n_props to be 0x16, but it puts 0x17 instead.
+	// X Raw Studio seems to always write this correctly as 0x1d and sends 629 bytes.
+	// When this structure is read back from the camera, it again sends it back as 601 bytes with n_props being 0x1d.
+	uint16_t n_props;
+	// This seems to hold a series of (or just one) standard MTP strings.
+	// The camera also seems to incorrectly format this property, writing the string as length 8 rather than 9.
+	// (See MTP spec page 21 - length of a string includes the null terminator)
+	char iop_codes[0x1ff];
+	// (offset 0x201)
+	// These appear to be in the same order as the props in the XML files
 	union Props {
-		struct Raw {
-			uint32_t props[22];
-		}raw;
-		struct XH1 {
+		uint32_t values[0x1d];
+		struct Props1 {
 			uint32_t prop0;
 			uint32_t prop1;
 			uint32_t prop2;
@@ -188,8 +188,14 @@ struct __attribute__((packed)) FujiBinaryProfile {
 			uint32_t prop20;
 			uint32_t prop21;
 			uint32_t ColorSpace;
-		}xh1;
+		}props_temp;
 	}props;
 };
 
+struct FPContext {
+	struct FujiFP1 *fp;
+	// TODO: IOPCode or some other capability code on the camera
+};
+
 int fp_parse_fp1(const char *path, struct FujiFP1 *fp1);
+int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1);
