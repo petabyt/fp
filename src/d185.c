@@ -98,7 +98,7 @@ static int parse_prop(struct FPContext *ctx, int idx, uint32_t value) {
 	}
 }
 
-int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1) {
+int fp_parse_d185(const uint8_t *bin, int len, struct FujiFP1 *fp1) {
 	if (len < 0x200) return -1;
 
 	const struct FujiBinaryProfile *profile = (const struct FujiBinaryProfile *)bin;

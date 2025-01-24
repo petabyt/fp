@@ -13,13 +13,12 @@ The results for this project were obtained through black-box reversing with [vca
 ## Profile Formats
 ### FP1/FP2/FP3
 XML user profile files created by X Raw Studio
-### raw
+### d185
 The data structure sent between X Raw Studio and the camera over PTP
 ### struct
-Intermediate data structure created for this project for other software to modify
+Intermediate C data structure created for this project for other software to modify
 
 - [x] FP1/XML to struct
-- [ ] Apply struct to raw
-- [ ] raw to struct
-- [ ] struct to raw
+- [ ] d185 to struct
+- [ ] struct to d185
 - [ ] struct to FP1

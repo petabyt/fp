@@ -247,5 +247,5 @@ struct FPContext {
 };
 
 int fp_parse_fp1(const char *path, struct FujiFP1 *fp1);
-int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1);
+int fp_parse_d185(const uint8_t *bin, int len, struct FujiFP1 *fp1);
 int fp_dump_struct(FILE *f, struct FujiFP1 *fp);
