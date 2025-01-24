@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "fp.h"
 
 struct FujiLookup fp_film_sim[] = {

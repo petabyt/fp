@@ -135,7 +135,7 @@ enum FujiWhiteBalance {
 	FP_WB_Invalid,
 };
 
-struct FujiFP1 {
+struct FujiProfile {
 	int StructVer;
 	char SerialNumber[64];
 	uint32_t IOPCode;
@@ -241,11 +241,6 @@ extern struct FujiLookup fp_drange_priority[];
 extern struct FujiLookup fp_noise_reduction[];
 extern struct FujiLookup fp_clarity[];
 
-struct FPContext {
-	struct FujiFP1 *fp;
-	// TODO: IOPCode or some other capability code on the camera
-};
-
-int fp_parse_fp1(const char *path, struct FujiFP1 *fp1);
-int fp_parse_d185(const uint8_t *bin, int len, struct FujiFP1 *fp1);
-int fp_dump_struct(FILE *f, struct FujiFP1 *fp);
+int fp_parse_fp1(const char *path, struct FujiProfile *fp1);
+int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp1);
+int fp_dump_struct(FILE *f, struct FujiProfile *fp);

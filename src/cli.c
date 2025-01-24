@@ -9,7 +9,7 @@ int parse_fp1_files(void) {
 	DIR *dir = opendir(folder_path);
 	if (!dir) return -1;
 
-	struct FujiFP1 fp;
+	struct FujiProfile fp;
 
 	struct dirent *entry;
 	while ((entry = readdir(dir)) != NULL) {
@@ -26,11 +26,11 @@ int parse_fp1_files(void) {
 }
 
 int parse_raw_files(void) {
-	const char *folder_path = "raw";
+	const char *folder_path = "d185";
 	DIR *dir = opendir(folder_path);
 	if (!dir) return -1;
 
-	struct FujiFP1 fp = {0};
+	struct FujiProfile fp = {0};
 
 	struct dirent *entry;
 	while ((entry = readdir(dir)) != NULL) {
@@ -49,7 +49,7 @@ int parse_raw_files(void) {
 			uint8_t *buffer = malloc(file_size);
 			fread(buffer, 1, file_size, f);
 
-			int rc = fp_parse_raw(buffer, (int)file_size, &fp);
+			int rc = fp_parse_d185(buffer, (int)file_size, &fp);
 			if (rc) return rc;
 
 			rc = fp_dump_struct(stdout, &fp);
@@ -65,6 +65,5 @@ int parse_raw_files(void) {
 
 int main(int argc, char **argv) {
 //	parse_fp1_files();
-	parse_raw_files();
-	return 0;
+	return parse_raw_files();
 }
