@@ -1,10 +1,13 @@
-CFLAGS := -I/usr/include/libxml2
-LDFLAGS := /usr/lib/x86_64-linux-gnu/libxml2.a -lm -lz -llzma -licuuc -licudata
+CFLAGS := `pkg-config --cflags libxml-2.0`
+LDFLAGS := `pkg-config --libs libxml-2.0` -lm -lz -llzma -licuuc -licudata
 
 all: fp
 	./fp
-fp: xml.o cli.o raw.o data.o
-	$(CC) xml.o cli.o raw.o data.o $(LDFLAGS) -o fp
+
+FILES := src/xml.o src/cli.o src/raw.o src/data.o
+
+fp: $(FILES)
+	$(CC) $(FILES) $(LDFLAGS) -o fp
 
 clean:
-	rm -rf *.o *.out fp
+	rm -rf src/*.o *.out fp
