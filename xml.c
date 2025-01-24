@@ -4,7 +4,6 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "fp.h"
-#include "data.h"
 
 const char *eval_iop_code(uint32_t code) {
 	// ???
@@ -234,4 +233,8 @@ int fp_parse_fp1(const char *path, struct FujiFP1 *fp1) {
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return 0;	
+}
+
+int fp_generate_fp1(FILE *fd, struct FujiFP1 *fp1) {
+	
 }

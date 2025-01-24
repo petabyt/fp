@@ -18,7 +18,8 @@ The data structure sent between X Raw Studio and the camera over PTP
 ### struct
 Intermediate data structure created for this project for other software to modify
 
-- [ ] FP1 to struct
+- [x] FP1/XML to struct
+- [ ] Apply struct to raw
 - [ ] raw to struct
 - [ ] struct to raw
 - [ ] struct to FP1
