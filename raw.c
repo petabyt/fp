@@ -33,12 +33,13 @@ int validate_prop(uint32_t value, void *output, struct FujiLookup *tbl) {
 }
 
 static int parse_prop(struct FPContext *ctx, int idx, uint32_t value) {
-	printf("Parsing prop %x at offset %x\n", value, idx);
 	switch (idx) {
 	case 0:
+		// Asuming ShootingCondition
 		//fp1->prop1 = validate_prop(ctx, value, &list);
 		return 0;
 	case 1:
+		// Assuming this is FileType
 		//fp1->prop2 = validate_prop(ctx, value, &list);
 		return 0;
 	case 2:
@@ -46,54 +47,41 @@ static int parse_prop(struct FPContext *ctx, int idx, uint32_t value) {
 	case 3:
 		return validate_prop(value, &ctx->fp->ImageQuality, fp_image_quality);
 	case 4:
-		//fp1->prop5 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->ExposureBias, fp_exposure_bias);
 	case 5:
-		//fp1->prop6 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->DynamicRange, fp_drange);
 	case 6:
-		//fp1->prop7 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->WideDRange, fp_drange_priority);
 	case 7:
 		return validate_prop(value, &ctx->fp->FilmSimulation, fp_film_sim);
 	case 8:
 		return validate_prop(value, &ctx->fp->GrainEffect, fp_grain_effect);
 	case 9:
-		//fp1->prop10 = validate_prop(ctx, value, &list);
+		ctx->fp->SmoothSkinEffect = value; // TODO
 		return 0;
 	case 10:
-		//fp1->WBShootCond = validate_prop(ctx, value, &list);
+		ctx->fp->WBShootCond = value; // TODO
 		return 0;
 	case 11:
 		return validate_prop(value, &ctx->fp->WhiteBalance, fp_white_balance);
 	case 12:
-		//fp1->WBShiftR = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->WBShiftR, fp_range);
 	case 13:
-		//fp1->WBShiftB = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->WBShiftB, fp_range);
 	case 14:
-		//fp1->WBColorTemp = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->WBColorTemp, fp_color_temp);
 	case 15:
-		//fp1->HighlightTone = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->HighlightTone, fp_range_p4_n2);
 	case 16:
-		//fp1->prop17 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->ShadowTone, fp_range_p4_n2);
 	case 17:
-		//fp1->prop18 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->Color, fp_range);
 	case 18:
 		return validate_prop(value, &ctx->fp->Sharpness, fp_range);
-		//fp1->Sharpness = validate_prop(ctx, value, &list);
-		return 0;
 	case 19:
-		//fp1->prop20 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->NoisReduction, fp_noise_reduction);
 	case 20:
-		//fp1->prop21 = validate_prop(ctx, value, &list);
-		return 0;
+		return validate_prop(value, &ctx->fp->Clarity, fp_clarity);
 	case 21:
 		return validate_prop(value, &ctx->fp->ColorSpace, fp_color_space);
 	case 22:
@@ -118,11 +106,6 @@ int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1) {
 	uint16_t n_props;
 	read_u16(&profile->n_props, &n_props);
 
-	int expected_length = ((int)n_props * 4) + 0x200;
-	if (len != expected_length) {
-		printf("Expected len %d, got %d\n", expected_length, len);
-	}
-
 	struct FPContext ctx = {
 		.fp = fp1,
 	};
@@ -139,6 +122,7 @@ int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1) {
 		int rc = parse_prop(&ctx, i, value);
 		if (rc) {
 			printf("Error parsing property of value %x at index %d\n", value, i);
+			return -1;
 		}
 	}
 

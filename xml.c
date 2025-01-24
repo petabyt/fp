@@ -5,13 +5,58 @@
 #include <libxml/tree.h>
 #include "fp.h"
 
-const char *eval_iop_code(uint32_t code) {
-	// ???
-	switch (code) {
-	case 0xFF159501:
-		return "X Processor 4";
+static int dump_property(FILE *f, const char *label, uint32_t value, struct FujiLookup *tbl) {
+	if (tbl == NULL) {
+		fprintf(f, "<%s>%x</%s>\n", label, value, label);
+		return 0;
+	} else {
+		for (int i = 0; tbl[i].key != 0; i++) {
+			if (tbl[i].value == value) {
+				fprintf(f, "<%s>%s</%s>\n", label, tbl[i].key, label);
+				return 0;
+			}
+		}
+		printf("Invalid value %x for %s\n", value, label);
+		return -1;
 	}
-	return "???";
+}
+
+int fp_dump_struct(FILE *f, struct FujiFP1 *fp) {
+	int rc = 0;
+	rc |= dump_property(f, "IOPCode", fp->IOPCode, NULL);
+	rc |= dump_property(f, "TetherRAWConditonCode", fp->TetherRAWConditonCode, NULL);
+	rc |= dump_property(f, "Editable", fp->Editable, NULL);
+	rc |= dump_property(f, "ShootingCondition", fp->ShootingCondition, NULL);
+	rc |= dump_property(f, "FileType", fp->FileType, NULL);
+	rc |= dump_property(f, "ImageSize", fp->ImageSize, NULL);
+	rc |= dump_property(f, "RotationAngle", fp->RotationAngle, NULL);
+	rc |= dump_property(f, "ImageQuality", fp->ImageQuality, NULL);
+	rc |= dump_property(f, "ExposureBias", fp->ExposureBias, NULL);
+	rc |= dump_property(f, "DynamicRange", fp->DynamicRange, NULL);
+	rc |= dump_property(f, "WideDRange", fp->WideDRange, NULL);
+	rc |= dump_property(f, "FilmSimulation", fp->FilmSimulation, fp_film_sim);
+	rc |= dump_property(f, "BlackImageTone", fp->BlackImageTone, NULL);
+	rc |= dump_property(f, "MonochromaticColor_RG", fp->MonochromaticColor_RG, NULL);
+	rc |= dump_property(f, "GrainEffect", fp->GrainEffect, fp_grain_effect);
+	rc |= dump_property(f, "GrainEffectSize", fp->GrainEffectSize, NULL);
+	rc |= dump_property(f, "ChromeEffect", fp->ChromeEffect, NULL);
+	rc |= dump_property(f, "ColorChromeBlue", fp->ColorChromeBlue, NULL);
+	rc |= dump_property(f, "SmoothSkinEffect", fp->SmoothSkinEffect, NULL);
+	rc |= dump_property(f, "WBShootCond", fp->WBShootCond, NULL);
+	rc |= dump_property(f, "WhiteBalance", fp->WhiteBalance, NULL);
+	rc |= dump_property(f, "WBShiftR", fp->WBShiftR, NULL);
+	rc |= dump_property(f, "WBShiftB", fp->WBShiftB, NULL);
+	rc |= dump_property(f, "WBColorTemp", fp->WBColorTemp, NULL);
+	rc |= dump_property(f, "HighlightTone", fp->HighlightTone, NULL);
+	rc |= dump_property(f, "ShadowTone", fp->ShadowTone, NULL);
+	rc |= dump_property(f, "Color", fp->Color, NULL);
+	rc |= dump_property(f, "Sharpness", fp->Sharpness, NULL);
+	rc |= dump_property(f, "NoisReduction", fp->NoisReduction, NULL);
+	rc |= dump_property(f, "Clarity", fp->Clarity, NULL);
+	rc |= dump_property(f, "LensModulationOpt", fp->LensModulationOpt, NULL);
+	rc |= dump_property(f, "ColorSpace", fp->ColorSpace, NULL);
+	rc |= dump_property(f, "HDR", fp->HDR, NULL);
+	return rc;
 }
 
 static int validate_lookup(struct FPContext *ctx, const char *str, void *out, struct FujiLookup *tbl) {

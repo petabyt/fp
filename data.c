@@ -26,6 +26,16 @@ struct FujiLookup fp_on_off[] = {
 	{"OFF", FP_OFF},
 	{0, 0},
 };
+struct FujiLookup fp_drange[] = {
+	{"DR100", 100},
+	{"DR200", 200},
+	{0, 0},
+};
+struct FujiLookup fp_drange_priority[] = {
+	{"OFF", 0},
+	{"WEAK", 1},
+	{0, 0},
+};
 struct FujiLookup fp_bool[] = {
 	{"TRUE", FP_TRUE},
 	{"FALSE", FP_FALSE},
@@ -101,11 +111,38 @@ struct FujiLookup fp_white_balance[] = {
 	{0, 0},
 };
 struct FujiLookup fp_color_temp[] = {
-	{"0K", 0},
-	{"3200K", 3200},
-	{"5900K", 5900},
-	{"8300K", 8300},
 	{"10000K", 10000},
+	{"9100K", 9100},
+	{"8300K", 8300},
+	{"7700K", 7700},
+	{"7100K", 7100},
+	{"6700K", 6700},
+	{"6300K", 6300},
+	{"5900K", 5900},
+	{"5600K", 5600},
+	{"5300K", 5300},
+	{"5000K", 5000},
+	{"4800K", 4800},
+	{"4500K", 4500},
+	{"4300K", 4300},
+	{"4200K", 4200},
+	{"4000K", 4000},
+	{"3800K", 3800},
+	{"3700K", 3700},
+	{"3600K", 3600},
+	{"3400K", 3400},
+	{"3300K", 3300},
+	{"3200K", 3200},
+	{"3100K", 3100},
+	{"3000K", 3000},
+	{"2950K", 2950},
+	{"2850K", 2850},
+	{"2800K", 2800},
+	{"2700K", 2700},
+	{"2650K", 2650},
+	{"2550K", 2550},
+	{"2500K", 2500},
+	{"0K", 0}, // Only valid if WhiteBalance is set to Temperature
 	{0, 0},
 };
 struct FujiLookup fp_range[] = {
@@ -118,6 +155,41 @@ struct FujiLookup fp_range[] = {
 	{"-2", FP_MIN_2},
 	{"-3", FP_MIN_3},
 	{"-4", FP_MIN_4},
+	{0, 0},
+};
+struct FujiLookup fp_noise_reduction[] = {
+	{"4", FP_NR_PLUS_4},
+	{"3", FP_NR_PLUS_3},
+	{"2", FP_NR_PLUS_2},
+	{"1", FP_NR_PLUS_1},
+	{"0", FP_NR_ZERO},
+	{"-1", FP_NR_MIN_1},
+	{"-2", FP_NR_MIN_2},
+	{"-3", FP_NR_MIN_3},
+	{"-4", FP_NR_MIN_4},
+	{0, 0},
+};
+struct FujiLookup fp_clarity[] = {
+	{"4", 4},
+	{"3", 3},
+	{"2", 2},
+	{"1", 1},
+	{"0", 0},
+	// TODO: Not understood yet
+//	{"-1", FP_NR_MIN_1},
+//	{"-2", FP_NR_MIN_2},
+//	{"-3", FP_NR_MIN_3},
+//	{"-4", FP_NR_MIN_4},
+	{0, 0},
+};
+struct FujiLookup fp_range_p4_n2[] = {
+	{"4", FP_PLUS_4},
+	{"3", FP_PLUS_3},
+	{"2", FP_PLUS_2},
+	{"1", FP_PLUS_1},
+	{"0", FP_ZERO},
+	{"-1", FP_MIN_1},
+	{"-2", FP_MIN_2},
 	{0, 0},
 };
 struct FujiLookup fp_color_space[] = {

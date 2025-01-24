@@ -80,6 +80,17 @@ enum FujiRange {
 	FP_MIN_4 = (int)0xffffffd8,
 };
 
+enum FujiNoiseReduction {
+	FP_NR_PLUS_4 = 0x5000,
+	FP_NR_PLUS_3 = 0x6000,
+	FP_NR_PLUS_2 = 0x0,
+	FP_NR_PLUS_1 = 0x1000,
+	FP_NR_ZERO = 0x2000,
+	FP_NR_MIN_1 = 0x3000,
+	FP_NR_MIN_2 = 0x4000,
+	FP_NR_MIN_3 = 0x7000,
+	FP_NR_MIN_4 = 0x8000,
+};
 
 enum FujiOnOff {
 	FP_OFF = 0,
@@ -177,30 +188,30 @@ struct __attribute__((packed)) FujiBinaryProfile {
 	// These appear to be in the same order as the props in the XML files
 	union Props {
 		uint32_t values[0x1d];
+		// For reference:
 		struct Props1 {
 			uint32_t prop0;
 			uint32_t prop1;
-			uint32_t prop2;
 			uint32_t ImageSize;
 			uint32_t ImageQuality;
-			uint32_t prop5; // ExposureBias/PushPullProcessing
-			uint32_t prop6; // DynamicRange
-			uint32_t prop7; // WideDRange
+			uint32_t ExposureBias;
+			uint32_t DynamicRange;
+			uint32_t WideDRange; // 6 D RangePriority
 			uint32_t FilmSimulation;
 			uint32_t GrainEffect;
-			uint32_t prop10;
-			uint32_t WBShootCond;
-			uint32_t WhiteBalance;
-			uint32_t WBShiftR;
-			uint32_t WBShiftB;
-			uint32_t WBColorTemp;
-			uint32_t HighlightTone;
-			uint32_t ShadowTone;
-			uint32_t prop18;
-			uint32_t Sharpness;
-			uint32_t NoisReduction;
-			uint32_t prop21;
-			uint32_t ColorSpace;
+			uint32_t GrainEffectSize;
+			uint32_t WBShootCond; // 10
+			uint32_t WhiteBalance; // 11
+			uint32_t WBShiftR; // 12
+			uint32_t WBShiftB; // 13
+			uint32_t WBColorTemp; // 14
+			uint32_t HighlightTone; // 15
+			uint32_t ShadowTone; // 16
+			uint32_t Color; // 17
+			uint32_t Sharpness; // 18
+			uint32_t NoisReduction; // 19
+			uint32_t Clarity; // 20
+			uint32_t ColorSpace; // 21
 		}props_temp;
 	}props;
 };
@@ -224,6 +235,11 @@ extern struct FujiLookup fp_white_balance[];
 extern struct FujiLookup fp_color_temp[];
 extern struct FujiLookup fp_range[];
 extern struct FujiLookup fp_color_space[];
+extern struct FujiLookup fp_range_p4_n2[];
+extern struct FujiLookup fp_drange[];
+extern struct FujiLookup fp_drange_priority[];
+extern struct FujiLookup fp_noise_reduction[];
+extern struct FujiLookup fp_clarity[];
 
 struct FPContext {
 	struct FujiFP1 *fp;
@@ -232,3 +248,4 @@ struct FPContext {
 
 int fp_parse_fp1(const char *path, struct FujiFP1 *fp1);
 int fp_parse_raw(const uint8_t *bin, int len, struct FujiFP1 *fp1);
+int fp_dump_struct(FILE *f, struct FujiFP1 *fp);
