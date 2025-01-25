@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 enum FujiFileType {
-	FP_JPG,
+	FP_JPG = 0x7, // Guessing
 };
 
 enum FujiImageSize {
@@ -173,6 +173,7 @@ struct FujiProfile {
 	uint32_t HDR;
 };
 
+// This is here for reference
 struct __attribute__((packed)) FujiBinaryProfile {
 	// So far this has been observed as 0x17 or 0x1d and seems to represent the number of properties following iop_codes.
 	// The problem is, the camera appears to always send this structure as exactly 601 bytes regardless of n_props.
@@ -244,3 +245,4 @@ extern struct FujiLookup fp_clarity[];
 int fp_parse_fp1(const char *path, struct FujiProfile *fp1);
 int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp1);
 int fp_dump_struct(FILE *f, struct FujiProfile *fp);
+int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len);

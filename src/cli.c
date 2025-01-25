@@ -52,6 +52,21 @@ int parse_raw_files(void) {
 			int rc = fp_parse_d185(buffer, (int)file_size, &fp);
 			if (rc) return rc;
 
+			uint8_t d185_buf[1024];
+			rc = fp_create_d185(&fp, d185_buf, 1024);
+			if (rc < 0) return rc;
+
+#if 0
+			char new_path[1024];
+			sprintf(new_path, "%s_m", file_path);
+			FILE *out = fopen(new_path, "wb");
+			fwrite(d185_buf, 1, rc, out);
+			fclose(out);
+#endif
+
+			rc = fp_parse_d185(buffer, (int)file_size, &fp);
+			if (rc) return rc;
+
 			rc = fp_dump_struct(stdout, &fp);
 			if (rc) return rc;
 
@@ -63,7 +78,12 @@ int parse_raw_files(void) {
 	return 0;	
 }
 
+int test_d185(void) {
+	return 0;
+}
+
 int main(int argc, char **argv) {
 //	parse_fp1_files();
+	//return test_d185();
 	return parse_raw_files();
 }

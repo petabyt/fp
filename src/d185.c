@@ -20,6 +20,24 @@ inline static int read_u32(const void *buf, uint32_t *out) {
 	*out = (uint32_t)b[0] | ((uint32_t)b[1] << 8) | ((uint32_t)b[2] << 16) | ((uint32_t)b[3] << 24);
 	return 4;
 }
+inline static int write_u8(void *buf, uint8_t out) {
+	((uint8_t *)buf)[0] = out;
+	return 1;
+}
+inline static int write_u16(void *buf, uint16_t out) {
+	uint8_t *b = buf;
+	b[0] = out & 0xFF;
+	b[1] = (out >> 8) & 0xFF;
+	return 2;
+}
+inline static int write_u32(void *buf, uint32_t out) {
+	uint8_t *b = buf;
+	b[0] = out & 0xFF;
+	b[1] = (out >> 8) & 0xFF;
+	b[2] = (out >> 16) & 0xFF;
+	b[3] = (out >> 24) & 0xFF;
+	return 4;
+}
 
 int validate_prop(uint32_t value, void *output, struct FujiLookup *tbl) {
 	// TODO: output should be uint32_t
@@ -31,16 +49,15 @@ int validate_prop(uint32_t value, void *output, struct FujiLookup *tbl) {
 	}
 	return -1;
 }
-
 static int parse_prop(struct FujiProfile *fp, int idx, uint32_t value) {
 	switch (idx) {
 	case 0:
-		// Asuming ShootingCondition
-		//fp1->prop1 = validate_prop(ctx, value, &list);
+		// 2
+		fp->ShootingCondition = value; 
 		return 0;
 	case 1:
-		// Assuming this is FileType
-		//fp1->prop2 = validate_prop(ctx, value, &list);
+		// 7
+		fp->FileType = value;
 		return 0;
 	case 2:
 		return validate_prop(value, &fp->ImageSize, fp_image_size);
@@ -97,6 +114,91 @@ static int parse_prop(struct FujiProfile *fp, int idx, uint32_t value) {
 		return -1;
 	}
 }
+static int get_prop(const struct FujiProfile *fp, int idx, uint32_t *value) {
+	switch (idx) {
+	case 0:
+		(*value) = 0x2;
+		return 0;
+	case 1:
+		(*value) = 0x7;
+		return 0;
+	case 2:
+		return validate_prop(fp->ImageSize, value, fp_image_size);
+	case 3:
+		return validate_prop(fp->ImageQuality, value, fp_image_quality);
+	case 4:
+		return validate_prop(fp->ExposureBias, value, fp_exposure_bias);
+	case 5:
+		return validate_prop(fp->DynamicRange, value, fp_drange);
+	case 6:
+		return validate_prop(fp->WideDRange, value, fp_drange_priority);
+	case 7:
+		return validate_prop(fp->FilmSimulation, value, fp_film_sim);
+	case 8:
+		return validate_prop(fp->GrainEffect, value, fp_grain_effect);
+	case 9:
+		(*value) = fp->SmoothSkinEffect;
+		return 0;
+	case 10:
+		(*value) = fp->WBShootCond;
+		return 0;
+	case 11:
+		return validate_prop(fp->WhiteBalance, value, fp_white_balance);
+	case 12:
+		return validate_prop(fp->WBShiftR, value, fp_range);
+	case 13:
+		return validate_prop(fp->WBShiftB, value, fp_range);
+	case 14:
+		return validate_prop(fp->WBColorTemp, value, fp_color_temp);
+	case 15:
+		return validate_prop(fp->HighlightTone, value, fp_range_p4_n2);
+	case 16:
+		return validate_prop(fp->ShadowTone, value, fp_range_p4_n2);
+	case 17:
+		return validate_prop(fp->Color, value, fp_range);
+	case 18:
+		return validate_prop(fp->Sharpness, value, fp_range);
+	case 19:
+		return validate_prop(fp->NoisReduction, value, fp_noise_reduction);
+	case 20:
+		return validate_prop(fp->Clarity, value, fp_clarity);
+	case 21:
+		return validate_prop(fp->ColorSpace, value, fp_color_space);
+	case 22:
+	case 23:
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 28:
+		(*value) = 0;
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len) {
+	if (!(len >= 0x274)) return -1;
+	int of = 0;
+	of += write_u16(bin + of, 0x1d);
+
+	for (int i = 0; i < 0x1ff; i++) {
+		of += write_u8(bin + of, 0x0);
+	}
+
+	for (int i = 0; i < 0x1d; i++) {
+		uint32_t value;
+		int rc = get_prop(fp, i, &value);
+		if (rc) {
+			printf("Error packing property %d\n", i);
+			return rc;
+		}
+		of += write_u32(bin + of, value);
+	}
+	
+	return of;
+}
 
 int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 	if (len < 0x200) return -1;
@@ -114,7 +216,8 @@ int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 	uint32_t iop_code = 0;
 	for (int i = 0; i < (int)str_len; i++) {
 		of += read_u16(bin + of, &wchr);
-		if (wchr == 0) break;
+		if (wchr == 0) break; // Skip NULL character (the camera doesn't even include it)
+		if (i > 8) return -1; // Don't handle more than 1 iopcode
 		iop_code *= 16;
 		if (wchr >= '0' && wchr <= '9') {
 			iop_code += (char)wchr - '0';
@@ -123,9 +226,6 @@ int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 		} else {
 			printf("Invalid char in IOPCode\n");
 			return -1;
-		}
-		if (of == 0x0) {
-			break;
 		}
 	}
 
