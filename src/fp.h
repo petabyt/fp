@@ -1,5 +1,11 @@
-#pragma once
+#ifndef FUJI_FP_H
+#define FUJI_FP_H
+
 #include <stdint.h>
+#include <stdio.h>
+
+#define FP_FP1_VER 1
+#define FP_FP2_VER 2
 
 enum FujiFileType {
 	FP_JPG = 0x7, // Guessing
@@ -21,11 +27,6 @@ enum FujiImageQuality {
 	FP_FINE = 0x2,
 	FP_NORMAL = 0x3,
 };
-
-//enum FujiExposureBias {
-//	FP_EXPO_BIAS_P0P67 = 1,
-//	FP_EXPO_BIAS_P0P33,
-//};
 
 enum FujiExposureBias {
 	FP_PLUS_3_EV = 3000,
@@ -94,12 +95,12 @@ enum FujiNoiseReduction {
 
 enum FujiOnOff {
 	FP_OFF = 0,
-	FP_ON,
+	FP_ON = 1,
 };
 
 enum FujiBool {
 	FP_FALSE = 0,
-	FP_TRUE,
+	FP_TRUE = 1,
 };
 
 enum FujiGrainEffect {
@@ -136,10 +137,19 @@ enum FujiWhiteBalance {
 };
 
 struct FujiProfile {
-	int StructVer;
+	int profile_version;
+	char prop_group_device[64]; // such as X-T3
+	char prop_group_version[64]; // such as X-T3_0100
+	/// @brief This always appears to be blank
 	char SerialNumber[64];
+	/// @brief This has always been observed as 65536
+	uint32_t StructVer;
+	/// @brief 32 bit code that IDs the image processor
 	uint32_t IOPCode;
+	/// @brief In XML, this will either be blank or be the value of prop_group_version.
+	/// If blank, this will be FP_FALSE, if matches prop_group_version, then FP_TRUE
 	uint32_t TetherRAWConditonCode;
+	/// @brief FP_TRUE or FP_FALSE
 	uint32_t Editable;
 	uint32_t ShootingCondition;
 	uint32_t FileType;
@@ -189,18 +199,18 @@ struct __attribute__((packed)) FujiBinaryProfile {
 	// These appear to be in the same order as the props in the XML files
 	union Props {
 		uint32_t values[0x1d];
-		// For reference:
+		// This is the property structure observed on X-H1
 		struct Props1 {
-			uint32_t prop0;
-			uint32_t prop1;
-			uint32_t ImageSize;
-			uint32_t ImageQuality;
-			uint32_t ExposureBias;
-			uint32_t DynamicRange;
-			uint32_t WideDRange; // 6 D RangePriority
-			uint32_t FilmSimulation;
-			uint32_t GrainEffect;
-			uint32_t GrainEffectSize;
+			uint32_t prop0; // 0
+			uint32_t prop1; // 1
+			uint32_t ImageSize; // 2
+			uint32_t ImageQuality; // 3
+			uint32_t ExposureBias; // 4
+			uint32_t DynamicRange; // 5
+			uint32_t WideDRange; // 6 (D RangePriority)
+			uint32_t FilmSimulation; // 7
+			uint32_t GrainEffect; // 8
+			uint32_t GrainEffectSize; // 9
 			uint32_t WBShootCond; // 10
 			uint32_t WhiteBalance; // 11
 			uint32_t WBShiftR; // 12
@@ -213,7 +223,7 @@ struct __attribute__((packed)) FujiBinaryProfile {
 			uint32_t NoisReduction; // 19
 			uint32_t Clarity; // 20
 			uint32_t ColorSpace; // 21
-		}props_temp;
+		}props_xh1_temp;
 	}props;
 };
 
@@ -242,7 +252,16 @@ extern struct FujiLookup fp_drange_priority[];
 extern struct FujiLookup fp_noise_reduction[];
 extern struct FujiLookup fp_clarity[];
 
+extern char fp_error_str[64];
+int fp_set_error(const char *fmt, ...);
+const char *fp_get_error(void);
+
+/// @brief Parse FP1/FP2/FP3 files
 int fp_parse_fp1(const char *path, struct FujiProfile *fp1);
 int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp1);
+/// @brief Dump struct as XML text to a file.
 int fp_dump_struct(FILE *f, struct FujiProfile *fp);
+/// @brief Convert to d185 structure that can be accepted by a camera
 int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len);
+
+#endif

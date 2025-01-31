@@ -4,10 +4,12 @@
 #include <dirent.h>
 #include "fp.h"
 
-int parse_fp1_files(void) {
-	const char *folder_path = "fp1";
+int parse_fp_files(const char *folder_path) {
 	DIR *dir = opendir(folder_path);
-	if (!dir) return -1;
+	if (!dir) {
+		printf("Can't open %s\n", folder_path);
+		return -1;
+	}
 
 	struct FujiProfile fp;
 
@@ -49,22 +51,31 @@ int parse_raw_files(void) {
 			uint8_t *buffer = malloc(file_size);
 			fread(buffer, 1, file_size, f);
 
+			// 1. d185 -> struct
 			int rc = fp_parse_d185(buffer, (int)file_size, &fp);
 			if (rc) return rc;
 
-			uint8_t d185_buf[1024];
+			// 2. struct -> d185
+			uint8_t d185_buf[1024] = {0};
 			rc = fp_create_d185(&fp, d185_buf, 1024);
 			if (rc < 0) return rc;
 
-#if 0
-			char new_path[1024];
-			sprintf(new_path, "%s_m", file_path);
-			FILE *out = fopen(new_path, "wb");
-			fwrite(d185_buf, 1, rc, out);
-			fclose(out);
-#endif
+			{
+				for (int i = 0; i < rc; i++) {
+					printf("%02x ", d185_buf[i]);
+					if ((i % 10) == 0 && i != 0) printf("\n");
+				}
+				printf("\n--------\n");
+				#if 0
+				char new_path[1024];
+				sprintf(new_path, "%s_m", file_path);
+				FILE *out = fopen(new_path, "wb");
+				fwrite(d185_buf, 1, rc, out);
+				fclose(out);
+				#endif
+			}
 
-			rc = fp_parse_d185(buffer, (int)file_size, &fp);
+			rc = fp_parse_d185(d185_buf, (int)file_size, &fp);
 			if (rc) return rc;
 
 			rc = fp_dump_struct(stdout, &fp);
@@ -82,8 +93,20 @@ int test_d185(void) {
 	return 0;
 }
 
+int test(void) {
+	int rc;
+	rc = parse_fp_files("fp1");
+	if (rc) return rc;
+	rc = parse_fp_files("fp2");
+	if (rc) return rc;
+	rc = test_d185();
+	if (rc) return rc;
+	rc = parse_raw_files();
+	return rc;
+}
+
 int main(int argc, char **argv) {
-//	parse_fp1_files();
-	//return test_d185();
-	return parse_raw_files();
+	int rc = test();
+	printf("rc: '%s'\n", fp_error_str);
+	return rc;
 }

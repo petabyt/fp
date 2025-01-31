@@ -189,7 +189,7 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 	xmlNode *cur = NULL;
 	for (cur = node; cur; cur = cur->next) {
 		if (cur->type != XML_ELEMENT_NODE) {
-			printf("%d\n", cur->type);
+			printf("Incorrect node type %d\n", cur->type);
 			return -1;
 		}
 
@@ -200,7 +200,10 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 		}
 
 		cur = cur->next;
-		if (cur == NULL) return -1;
+		if (cur == NULL) {
+			printf("Expected node\n");
+			return -1;
+		}
 
 		int rc = parse_prop(fp, name, value);
 		if (rc) {
@@ -223,7 +226,7 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	xmlDoc *doc = xmlReadFile(path, NULL, 0);
 	if (doc == NULL) {
 		fprintf(stderr, "Could not parse file: %s\n", path);
-		return 1;
+		return -1;
 	}
 
 	xmlNode *root = xmlDocGetRootElement(doc);
@@ -232,13 +235,16 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 		return -1;
 	}
 
-	if (strcmp((const char *)root->name, "ConversionProfile")) {
+	if (strcmp((const char *)root->name, "ConversionProfile") != 0) {
 		abort();
 	}
 
 	// For now, we will assume these properties will be in order
 	xmlAttr *property = root->properties;
-	if (property == NULL) return -1;
+	if (property == NULL) {
+		printf("Expected properties in ConversionProfile\n");
+		return -1;
+	}
 	if (!strcmp((const char *)property->name, "application")) {
 		xmlChar *value = xmlNodeListGetString(root->doc, property->children, 1);
 		if (strcmp((const char *)value, "XRFC")) {
@@ -249,10 +255,17 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 		xmlFree(value);
 	}
 	property = property->next;
-	if (property == NULL) return -1;
+	if (property == NULL) {
+		printf("Expected another property in ConversionProfile");
+		return -1;
+	}
 	if (!strcmp((const char *)property->name, "version")) {
 		xmlChar *value = xmlNodeListGetString(root->doc, property->children, 1);
-		if (strcmp((const char *)value, "1.10.0.0") && strcmp((const char *)value, "1.11.0.0")) {
+		if (!strcmp((const char *)value, "1.10.0.0") || !strcmp((const char *)value, "1.11.0.0")) {
+			fp->profile_version = FP_FP1_VER;
+		} else if (!strcmp((const char *)value, "1.12.0.0")) {
+			fp->profile_version = FP_FP2_VER;
+		} else {
 			printf("Profile version '%s' not supported.\n", (const char *)value);
 			xmlFreeDoc(doc);
 			return -1;

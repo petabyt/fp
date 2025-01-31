@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "fp.h"
 
+char fp_error_str[64] = {0};
+
 inline static int read_u8(const void *buf, uint8_t *out) {
 	const uint8_t *b = buf;
 	*out = b[0];
@@ -183,7 +185,16 @@ int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len) {
 	int of = 0;
 	of += write_u16(bin + of, 0x1d);
 
-	for (int i = 0; i < 0x1ff; i++) {
+	char temp_iop_code[64];
+	snprintf(temp_iop_code, sizeof(temp_iop_code), "%08X", fp->IOPCode);
+
+	of += write_u8(bin + of, strlen(temp_iop_code) + 1);
+	for (int i = 0; temp_iop_code[i] != '\0'; i++) {
+		of += write_u16(bin + of, (uint16_t)temp_iop_code[i]);
+	}
+	of += write_u16(bin + of, 0x0);
+
+	while (of < 0x201) {
 		of += write_u8(bin + of, 0x0);
 	}
 
@@ -202,6 +213,8 @@ int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len) {
 
 int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 	if (len < 0x200) return -1;
+
+	memset(fp, 0, sizeof(struct FujiProfile));
 
 	//const struct FujiBinaryProfile *profile = (const struct FujiBinaryProfile *)bin;
 
