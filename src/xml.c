@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libxml/parser.h>
+#include <stdlib.h>
 #include <libxml/tree.h>
 #include "fp.h"
 
@@ -275,7 +276,7 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	
 	xmlNode *group = root->children->next;
 	if (strcmp((const char *)group->name, "PropertyGroup")) {
-		printf("Expected node 'PropertyGroup', not '%s'\n", group->name);
+		printf("Expected node 'PropertyGroup', not '%s'\n", (const char *)group->name);
 		return -1;
 	}
 
