@@ -51,6 +51,7 @@ int validate_prop(uint32_t value, void *output, struct FujiLookup *tbl) {
 	}
 	return -1;
 }
+
 static int parse_prop(struct FujiProfile *fp, int idx, uint32_t value) {
 	switch (idx) {
 	case 0:

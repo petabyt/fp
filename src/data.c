@@ -1,5 +1,38 @@
-#include <stdio.h>
 #include "fp.h"
+
+int fp_apply_profile(const struct FujiProfile *from, struct FujiProfile *to) {
+	to->ShootingCondition = from->ShootingCondition;
+	to->FileType = from->FileType;
+	to->ImageSize = from->ImageSize;
+	to->RotationAngle = from->RotationAngle;
+	to->ImageQuality = from->ImageQuality;
+	to->ExposureBias = from->ExposureBias;
+	to->DynamicRange = from->DynamicRange;
+	to->WideDRange = from->WideDRange;
+	to->FilmSimulation = from->FilmSimulation;
+	to->BlackImageTone = from->BlackImageTone;
+	to->MonochromaticColor_RG = from->MonochromaticColor_RG;
+	to->GrainEffect = from->GrainEffect;
+	to->GrainEffectSize = from->GrainEffectSize;
+	to->ChromeEffect = from->ChromeEffect;
+	to->ColorChromeBlue = from->ColorChromeBlue;
+	to->SmoothSkinEffect = from->SmoothSkinEffect;
+	to->WBShootCond = from->WBShootCond;
+	to->WhiteBalance = from->WhiteBalance;
+	to->WBShiftR = from->WBShiftR;
+	to->WBShiftB = from->WBShiftB;
+	to->WBColorTemp = from->WBColorTemp;
+	to->HighlightTone = from->HighlightTone;
+	to->ShadowTone = from->ShadowTone;
+	to->Color = from->Color;
+	to->Sharpness = from->Sharpness;
+	to->NoisReduction = from->NoisReduction;
+	to->Clarity = from->Clarity;
+	to->LensModulationOpt = from->LensModulationOpt;
+	to->ColorSpace = from->ColorSpace;
+	to->HDR = from->HDR;
+	return 0;
+}
 
 struct FujiLookup fp_film_sim[] = {
 	{"Provia", FP_Provia},

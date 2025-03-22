@@ -1,3 +1,4 @@
+/** \file */
 #ifndef FUJI_FP_H
 #define FUJI_FP_H
 
@@ -162,6 +163,7 @@ struct FujiProfile {
 	uint32_t FilmSimulation;
 	uint32_t BlackImageTone;
 	uint32_t MonochromaticColor_RG;
+	/// @see struct FujiRange
 	uint32_t GrainEffect;
 	uint32_t GrainEffectSize;
 	uint32_t ChromeEffect;
@@ -254,14 +256,29 @@ extern struct FujiLookup fp_clarity[];
 
 extern char fp_error_str[64];
 int fp_set_error(const char *fmt, ...);
+
+/// @brief All functions in this library will (should) fill an error buffer noting what went wrong
+/// if an error code was returned.
 const char *fp_get_error(void);
 
 /// @brief Parse FP1/FP2/FP3 files
+/// @returns non-zero for error
 int fp_parse_fp1(const char *path, struct FujiProfile *fp1);
+
+/// @brief Parse a raw binary profile from PTP property 0xd185
+/// @returns Non-zero for error
 int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp1);
+
 /// @brief Dump struct as XML text to a file.
+/// @returns non-zero for error
 int fp_dump_struct(FILE *f, struct FujiProfile *fp);
+
 /// @brief Convert to d185 structure that can be accepted by a camera
+/// @returns non-zero for error
 int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len);
+
+/// @brief Merge a profile 'from' into 'to'
+/// @returns non-zero for error
+int fp_apply_profile(const struct FujiProfile *from, struct FujiProfile *to);
 
 #endif
