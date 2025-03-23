@@ -3,7 +3,6 @@
 #include <string.h>
 #include <libxml/parser.h>
 #include <stdlib.h>
-#include <libxml/tree.h>
 #include "fp.h"
 
 static int dump_property(FILE *f, const char *label, uint32_t value, struct FujiLookup *tbl) {
@@ -60,13 +59,15 @@ int fp_dump_struct(FILE *f, struct FujiProfile *fp) {
 	return rc;
 }
 
-static int validate_lookup(struct FujiProfile *fp, const char *str, void *out, struct FujiLookup *tbl) {
-	(void)fp; // TODO: Should this function validate value based on IOPCode?
+static int validate_lookup(const char *str, uint32_t *out, struct FujiLookup *tbl) {
+	if (str == NULL) {
+		printf("validate_lookup has to handle NULL value\n");
+		return -1;
+	}
 
-	uint32_t *out_u32 = out;
 	for (int i = 0; tbl[i].key != NULL; i++) {
 		if (!strcmp(str, tbl[i].key)) {
-			(*out_u32) = tbl[i].value;
+			(*out) = tbl[i].value;
 			return 0;
 		}
 	}
@@ -75,9 +76,9 @@ static int validate_lookup(struct FujiProfile *fp, const char *str, void *out, s
 
 static int parse_prop(struct FujiProfile *fp, const char *key, const char *value) {
 	if (!strcmp(key, "SerialNumber")) {
-		// TODO
+		// Nothing to do with this it seems like
 	} else if (!strcmp(key, "Editable")) {
-		return validate_lookup(fp, value, &fp->Editable, fp_bool);
+		return validate_lookup(value, &fp->Editable, fp_bool);
 	} else if (!strcmp(key, "IOPCode")) {
 		if (value == NULL) return -1;
 		if (strlen(value) != 8) return -1;
@@ -87,23 +88,22 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 		// Should always be 0x10000
 		if (!strcmp(value, "65536")) {
 			return 0;
-		} else {
-			return -1;
 		}
+		return -1;
 	} else if (!strcmp(key, "FileType")) {
-		return validate_lookup(fp, value, &fp->FileType, fp_file_type);
+		return validate_lookup(value, &fp->FileType, fp_file_type);
 	} else if (!strcmp(key, "ImageSize")) {
-		return validate_lookup(fp, value, &fp->ImageSize, fp_image_size);
+		return validate_lookup(value, &fp->ImageSize, fp_image_size);
 	} else if (!strcmp(key, "ImageQuality")) {
-		return validate_lookup(fp, value, &fp->ImageQuality, fp_image_quality);
+		return validate_lookup(value, &fp->ImageQuality, fp_image_quality);
 	} else if (!strcmp(key, "ExposureBias")) {
-		return validate_lookup(fp, value, &fp->ExposureBias, fp_exposure_bias);
+		return validate_lookup(value, &fp->ExposureBias, fp_exposure_bias);
 	} else if (!strcmp(key, "ChromeEffect")) {
-		return validate_lookup(fp, value, &fp->ChromeEffect, fp_chrome_effect);
+		return validate_lookup(value, &fp->ChromeEffect, fp_chrome_effect);
 	} else if (!strcmp(key, "WhiteBalance")) {
-		return validate_lookup(fp, value, &fp->WhiteBalance, fp_white_balance);
+		return validate_lookup(value, &fp->WhiteBalance, fp_white_balance);
 	} else if (!strcmp(key, "WBColorTemp")) {
-		return validate_lookup(fp, value, &fp->WBColorTemp, fp_color_temp);
+		return validate_lookup(value, &fp->WBColorTemp, fp_color_temp);
 	} else if (!strcmp(key, "WBShiftR")) {
 		if (value == NULL) return -1;
 		int val = (int)strtoul(value, NULL, 0);
@@ -115,17 +115,17 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 		if (!(val >= -10 && val <= 10)) return -1;
 		fp->WBShiftR = val;
 	} else if (!strcmp(key, "HighlightTone")) {
-		return validate_lookup(fp, value, &fp->Color, fp_range);
+		return validate_lookup(value, &fp->HighlightTone, fp_get_highlight_tone(fp));
 	} else if (!strcmp(key, "ShadowTone")) {
-		return validate_lookup(fp, value, &fp->Color, fp_range);
+		return validate_lookup(value, &fp->ShadowTone, fp_get_shadow_tone(fp));
 	} else if (!strcmp(key, "Color")) {
-		return validate_lookup(fp, value, &fp->Color, fp_range);
+		return validate_lookup(value, &fp->Color, fp_range);
 	} else if (!strcmp(key, "Sharpness")) {
-		return validate_lookup(fp, value, &fp->Sharpness, fp_range);
+		return validate_lookup(value, &fp->Sharpness, fp_range);
 	} else if (!strcmp(key, "NoisReduction")) {
-		return validate_lookup(fp, value, &fp->NoisReduction, fp_range);
+		return validate_lookup(value, &fp->NoisReduction, fp_range);
 	} else if (!strcmp(key, "Clarity")) {
-		return validate_lookup(fp, value, &fp->Clarity, fp_range);
+		return validate_lookup(value, &fp->Clarity, fp_range);
 	} else if (!strcmp(key, "TetherRAWConditonCode")) {
 		// TODO
 	} else if (!strcmp(key, "SourceFileName")) {
@@ -135,20 +135,20 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 	} else if (!strcmp(key, "ShootingCondition")) {
 		// TODO
 	} else if (!strcmp(key, "FilmSimulation")) {
-		return validate_lookup(fp, value, &fp->FilmSimulation, fp_film_sim);
+		return validate_lookup(value, &fp->FilmSimulation, fp_film_sim);
 	} else if (!strcmp(key, "RotationAngle")) {
 		if (value == NULL) return -1;
 		fp->RotationAngle = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "DynamicRange")) {
 		if (value == NULL) return -1;
 		fp->DynamicRange = (int)strtoul(value, NULL, 0);
-		if (!(fp->DynamicRange >= 0 && fp->DynamicRange <= 100)) {
+		if (fp->DynamicRange != 100 && fp->DynamicRange != 200 && fp->DynamicRange != 400) {
 			return -1;
 		}
 	} else if (!strcmp(key, "WideDRange")) {
 		if (value == NULL) return -1;
 		uint32_t v = (int)strtoul(value, NULL, 0);
-		if (!(v >= 0 && v <= 100)) {
+		if (!(v <= 100)) {
 			return -1;
 		}
 		fp->WideDRange = v;
@@ -162,23 +162,38 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 		if (value == NULL) return -1;
 		fp->MonochromaticColor_RG = (int)strtoul(value, NULL, 0);
 	} else if (!strcmp(key, "GrainEffect")) {
-		return validate_lookup(fp, value, &fp->GrainEffect, fp_grain_effect);
+		return validate_lookup(value, &fp->GrainEffect, fp_grain_effect);
 	} else if (!strcmp(key, "GrainEffectSize")) {
-		return validate_lookup(fp, value, &fp->GrainEffectSize, fp_grain_effect_size);
+		return validate_lookup(value, &fp->GrainEffectSize, fp_grain_effect_size);
 	} else if (!strcmp(key, "ColorChromeBlue")) {
-		// TODO NULL, or "WEAK"
+		if (value == NULL) {
+			fp->ColorChromeBlue = 0;
+			return 0;
+		} else {
+			return validate_lookup(value, &fp->ColorChromeBlue, fp_color_chrome_blue);
+		}
 	} else if (!strcmp(key, "HDR")) {
 		if (value != NULL) return -1;
 		fp->HDR = FP_TRUE;
 	} else if (!strcmp(key, "SmoothSkinEffect")) {
-		if (value != NULL) return -1;
-		fp->SmoothSkinEffect = FP_ON;
+		// Observed as
+		// <SmoothSkinEffect/>
+		// and
+		// <SmoothSkinEffect>OFF</SmoothSkinEffect>
+		// so far
+		if (value == NULL) { fp->SmoothSkinEffect = FP_ON; return 0; }
+		return validate_lookup(value, &fp->WBShootCond, fp_on_off);
 	} else if (!strcmp(key, "WBShootCond")) {
-		return validate_lookup(fp, value, &fp->WBShootCond, fp_on_off);
+		return validate_lookup(value, &fp->WBShootCond, fp_on_off);
 	} else if (!strcmp(key, "LensModulationOpt")) {
-		return validate_lookup(fp, value, &fp->WBShootCond, fp_on_off);
+		return validate_lookup(value, &fp->WBShootCond, fp_on_off);
 	} else if (!strcmp(key, "ColorSpace")) {
-		return validate_lookup(fp, value, &fp->ColorSpace, fp_color_space);
+		return validate_lookup(value, &fp->ColorSpace, fp_color_space);
+	} else if (!strcmp(key, "DigitalTeleConv")) {
+		if (value == NULL) { fp->DigitalTeleConv = FP_ON; return 0; }
+		return validate_lookup(value, &fp->DigitalTeleConv, fp_on_off);
+	} else if (!strcmp(key, "PortraitEnhancer")) {
+		if (value == NULL) { fp->PortraitEnhancer = FP_ON; return 0; }
 	} else {
 		printf("TODO: %s\n", key);
 		return -1;
@@ -195,6 +210,10 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 		}
 
 		const char *name = (const char *)cur->name;
+		if (name == NULL) {
+			printf("Don't know how to handle node->name == NULL\n");
+			abort();
+		}
 		const char *value = NULL;
 		if (cur->children != NULL && cur->children->content != NULL) {
 			value = (const char *)cur->children->content;
@@ -202,14 +221,18 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 
 		cur = cur->next;
 		if (cur == NULL) {
-			printf("Expected node\n");
+			printf("Expected end tag node\n");
 			return -1;
 		}
 
-		int rc = parse_prop(fp, name, value);
-		if (rc) {
-			printf("Error parsing prop '%s' = '%s'\n", name, value);
-			return rc;
+		if (!strcmp(name, "RejectedValue")) {
+			printf("Skipping %s\n", name);
+		} else {
+			int rc = parse_prop(fp, name, value);
+			if (rc) {
+				printf("Error parsing prop '%s' = '%s'\n", name, value);
+				return rc;
+			}
 		}
 		
 		if (cur->children) {

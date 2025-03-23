@@ -10,6 +10,11 @@ raw data structure sent over PTP/USB.
 
 The results for this project were obtained through black-box reversing with [vcam](https://github.com/petabyt/vcam).
 
+Testing:
+```
+cmake -DFP_INCLUDE_CLI=ON -G Ninja -B build && cmake --build build && build/test
+```
+
 ## Profile Formats
 ### FP1/FP2/FP3
 XML user profile files created by X Raw Studio

@@ -34,6 +34,23 @@ int fp_apply_profile(const struct FujiProfile *from, struct FujiProfile *to) {
 	return 0;
 }
 
+static int is_xprocessor5(uint32_t iop) {
+	return (iop & 0x00ffff00) == 0x00179500;
+}
+
+struct FujiLookup *fp_get_highlight_tone(struct FujiProfile *fp) {
+	if (is_xprocessor5(fp->IOPCode)) {
+		return fp_range_p4_n4_halfs;
+	}
+	return fp_range_p4_n2;
+}
+struct FujiLookup *fp_get_shadow_tone(struct FujiProfile *fp) {
+	if (is_xprocessor5(fp->IOPCode)) {
+		return fp_range_p4_n4_halfs;
+	}
+	return fp_range_p4_n2;
+}
+
 struct FujiLookup fp_film_sim[] = {
 	{"Provia", FP_Provia},
 	{"Velvia", FP_Velvia},
@@ -53,6 +70,10 @@ struct FujiLookup fp_film_sim[] = {
 	{"BR", FP_MonochromeR},
 	{"BG", FP_MonochromeG},
 	{"Sepia", FP_Sepia},
+
+	// Unimplemented film simulations, just map to an older simulation
+	{"NostalgicNEGA", FP_ClassicChrome}, // TODO
+
 	{0, 0},
 };
 struct FujiLookup fp_on_off[] = {
@@ -67,6 +88,11 @@ struct FujiLookup fp_drange[] = {
 };
 struct FujiLookup fp_drange_priority[] = {
 	{"OFF", 0},
+	{"WEAK", 1},
+	{0, 0},
+};
+struct FujiLookup fp_color_chrome_blue[] = {
+	{"ON", 0},
 	{"WEAK", 1},
 	{0, 0},
 };
@@ -226,8 +252,29 @@ struct FujiLookup fp_range_p4_n2[] = {
 	{"-2", FP_MIN_2},
 	{0, 0},
 };
+struct FujiLookup fp_range_p4_n4_halfs[] = {
+	{"4", FP_PLUS_4},
+	{"3.5", FP_PLUS_3P5},
+	{"3", FP_PLUS_3},
+	{"2.5", FP_PLUS_2P5},
+	{"2", FP_PLUS_2},
+	{"1.5", FP_PLUS_1P5},
+	{"1", FP_PLUS_1},
+	{"0.5", FP_PLUS_P5}, // ??
+	{"0", FP_ZERO},
+	{"-0.5", FP_MIN_P5},
+	{"-1", FP_MIN_1},
+	{"-1.5", FP_MIN_1P5},
+	{"-2", FP_MIN_2},
+	{"-2.5", FP_MIN_2P5},
+	{"-3", FP_MIN_3},
+	{"-3.5", FP_MIN_3P5},
+	{"-4", FP_MIN_4},
+	{0, 0},
+};
 struct FujiLookup fp_color_space[] = {
 	{"sRGB", 1},
-	{"Adobe sRGB", 2}, // TODO
+	{"Adobe sRGB", 2}, // TODO: ???
+	{"AdobeRGB", 3}, // TODO: ???
 	{0, 0},
 };

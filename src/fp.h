@@ -70,17 +70,25 @@ enum FujiSim {
 	FP_Sepia = 0xa,
 };
 
-enum FujiRange {
-	FP_PLUS_4 = 40,
-	FP_PLUS_3 = 30,
-	FP_PLUS_2 = 20,
-	FP_PLUS_1 = 10,
-	FP_ZERO = 0,
-	FP_MIN_1 = (int)0xfffffff6,
-	FP_MIN_2 = (int)0xffffffec,
-	FP_MIN_3 = (int)0xffffffe1,
-	FP_MIN_4 = (int)0xffffffd8,
-};
+/// @defgroup FujiRange @{
+#define FP_PLUS_4 40
+#define FP_PLUS_3P5 45
+#define FP_PLUS_3 30
+#define FP_PLUS_2P5 25
+#define FP_PLUS_2 20
+#define FP_PLUS_1P5 15
+#define FP_PLUS_1 10
+#define FP_PLUS_P5 5
+#define FP_ZERO 0
+#define FP_MIN_P5 0xfffffffb
+#define FP_MIN_1 0xfffffff6
+#define FP_MIN_1P5 0xfffffff1
+#define FP_MIN_2 0xffffffec
+#define FP_MIN_2P5 0xffffffe7
+#define FP_MIN_3 0xffffffe1
+#define FP_MIN_3P5 0xffffffdd
+#define FP_MIN_4 0xffffffd8
+/// @}
 
 enum FujiNoiseReduction {
 	FP_NR_PLUS_4 = 0x5000,
@@ -183,6 +191,10 @@ struct FujiProfile {
 	uint32_t LensModulationOpt;
 	uint32_t ColorSpace;
 	uint32_t HDR;
+	uint32_t DigitalTeleConv;
+	uint32_t PortraitEnhancer;
+	// Not entirely sure how to do this
+	uint32_t RejectedValue_BlackImageTone;
 };
 
 // This is here for reference
@@ -253,6 +265,10 @@ extern struct FujiLookup fp_drange[];
 extern struct FujiLookup fp_drange_priority[];
 extern struct FujiLookup fp_noise_reduction[];
 extern struct FujiLookup fp_clarity[];
+extern struct FujiLookup fp_color_chrome_blue[];
+extern struct FujiLookup fp_range_p4_n4_halfs[];
+struct FujiLookup *fp_get_highlight_tone(struct FujiProfile *fp);
+struct FujiLookup *fp_get_shadow_tone(struct FujiProfile *fp);
 
 extern char fp_error_str[64];
 int fp_set_error(const char *fmt, ...);

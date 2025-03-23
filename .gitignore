@@ -2,3 +2,5 @@
 fp
 compile_commands.json
 .cache
+build
+cmake-debug-build

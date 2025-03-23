@@ -1,6 +1,5 @@
 // Copyright 2025 Daniel C
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include "fp.h"
@@ -41,11 +40,11 @@ inline static int write_u32(void *buf, uint32_t out) {
 	return 4;
 }
 
-int validate_prop(uint32_t value, void *output, struct FujiLookup *tbl) {
+int validate_prop(uint32_t value, uint32_t *output, struct FujiLookup *tbl) {
 	// TODO: output should be uint32_t
 	for (int i = 0; tbl[i].key != NULL; i++) {
 		if (value == tbl[i].value) {
-			((uint32_t *)output)[0] = value;
+			output[0] = value;
 			return 0;
 		}
 	}
@@ -91,9 +90,9 @@ static int parse_prop(struct FujiProfile *fp, int idx, uint32_t value) {
 	case 14:
 		return validate_prop(value, &fp->WBColorTemp, fp_color_temp);
 	case 15:
-		return validate_prop(value, &fp->HighlightTone, fp_range_p4_n2);
+		return validate_prop(value, &fp->HighlightTone, fp_get_highlight_tone(fp));
 	case 16:
-		return validate_prop(value, &fp->ShadowTone, fp_range_p4_n2);
+		return validate_prop(value, &fp->ShadowTone, fp_get_shadow_tone(fp));
 	case 17:
 		return validate_prop(value, &fp->Color, fp_range);
 	case 18:
@@ -154,9 +153,9 @@ static int get_prop(const struct FujiProfile *fp, int idx, uint32_t *value) {
 	case 14:
 		return validate_prop(fp->WBColorTemp, value, fp_color_temp);
 	case 15:
-		return validate_prop(fp->HighlightTone, value, fp_range_p4_n2);
+		return validate_prop(fp->HighlightTone, value, fp_get_highlight_tone(fp));
 	case 16:
-		return validate_prop(fp->ShadowTone, value, fp_range_p4_n2);
+		return validate_prop(fp->ShadowTone, value, fp_get_shadow_tone(fp));
 	case 17:
 		return validate_prop(fp->Color, value, fp_range);
 	case 18:
