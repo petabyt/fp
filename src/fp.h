@@ -1,4 +1,4 @@
-/** \file */
+/// @file
 #ifndef FUJI_FP_H
 #define FUJI_FP_H
 
@@ -70,7 +70,8 @@ enum FujiSim {
 	FP_Sepia = 0xa,
 };
 
-/// @defgroup FujiRange @{
+/// @addtogroup FujiRange
+/// @{
 #define FP_PLUS_4 40
 #define FP_PLUS_3P5 45
 #define FP_PLUS_3 30

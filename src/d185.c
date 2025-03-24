@@ -104,9 +104,13 @@ static int parse_prop(struct FujiProfile *fp, int idx, uint32_t value) {
 	case 21:
 		return validate_prop(value, &fp->ColorSpace, fp_color_space);
 	case 22:
+		// HDR??
 	case 23:
+		// DigitalTeleConv??
 	case 24:
+		// PortraitEnhancer
 	case 25:
+		// Something to do with RejectedValue?
 	case 26:
 	case 27:
 	case 28:

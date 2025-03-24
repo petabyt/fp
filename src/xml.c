@@ -234,13 +234,13 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 				return rc;
 			}
 		}
-		
+
+		// Don't care about property children for now
 		if (cur->children) {
 			xmlNode *tags = cur->children;
 			for (; tags; tags = tags->next) {
 				printf("%s\n", (const char *)tags->name);
 			}
-			continue;
 		}
 	}
 	return 0;
