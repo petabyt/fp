@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.4.4...3.5.0)
+cmake_minimum_required(VERSION 3.5.0)
 project(fp)
 
 option(FP_INCLUDE_CLI "include cli" OFF)

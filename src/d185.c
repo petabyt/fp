@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include "fp.h"
 
-char fp_error_str[64] = {0};
-
 inline static int read_u8(const void *buf, uint8_t *out) {
 	const uint8_t *b = buf;
 	*out = b[0];

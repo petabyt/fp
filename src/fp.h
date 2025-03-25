@@ -272,7 +272,7 @@ struct FujiLookup *fp_get_highlight_tone(struct FujiProfile *fp);
 struct FujiLookup *fp_get_shadow_tone(struct FujiProfile *fp);
 
 extern char fp_error_str[64];
-int fp_set_error(const char *fmt, ...);
+void fp_set_error(const char *fmt, ...);
 
 /// @brief All functions in this library will (should) fill an error buffer noting what went wrong
 /// if an error code was returned.

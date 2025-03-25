@@ -1,4 +1,16 @@
+#include <stdarg.h>
 #include "fp.h"
+
+char fp_error_str[64] = {0};
+const char *fp_get_error(void) {
+	return fp_error_str;
+}
+void fp_set_error(const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(fp_error_str, sizeof(fp_error_str), fmt, args);
+	va_end(args);
+}
 
 int fp_apply_profile(const struct FujiProfile *from, struct FujiProfile *to) {
 	to->ShootingCondition = from->ShootingCondition;
