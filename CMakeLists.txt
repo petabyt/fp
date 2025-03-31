@@ -29,5 +29,5 @@ target_include_directories(fp
 )
 target_link_libraries(fp
 	PRIVATE
-	${LIBXML2_LIBRARIES} # require build
+	${LIBXML2_LIBRARIES} # TODO: switch to LibXml2::LibXml2
 )

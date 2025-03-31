@@ -39,10 +39,12 @@ int fp_apply_profile(const struct FujiProfile *from, struct FujiProfile *to) {
 	to->Color = from->Color;
 	to->Sharpness = from->Sharpness;
 	to->NoisReduction = from->NoisReduction;
-	to->Clarity = from->Clarity;
-	to->LensModulationOpt = from->LensModulationOpt;
-	to->ColorSpace = from->ColorSpace;
-	to->HDR = from->HDR;
+
+	// None of these have been tested yet:
+	//to->Clarity = from->Clarity;
+	//to->LensModulationOpt = from->LensModulationOpt;
+	//to->ColorSpace = from->ColorSpace;
+	//to->HDR = from->HDR;
 	return 0;
 }
 
@@ -242,16 +244,16 @@ struct FujiLookup fp_noise_reduction[] = {
 	{0, 0},
 };
 struct FujiLookup fp_clarity[] = {
+	// This dataset hasn't been well-tested
 	{"4", 4},
 	{"3", 3},
 	{"2", 2},
 	{"1", 1},
 	{"0", 0},
-	// TODO: Not understood yet
-//	{"-1", FP_NR_MIN_1},
-//	{"-2", FP_NR_MIN_2},
-//	{"-3", FP_NR_MIN_3},
-//	{"-4", FP_NR_MIN_4},
+	{"-1", 0xFFFFFFFF},
+	{"-2", 0xFFFFFFFF - 1},
+	{"-3", 0xFFFFFFFF - 2},
+	{"-4", 0xFFFFFFFF - 3},
 	{0, 0},
 };
 struct FujiLookup fp_range_p4_n2[] = {

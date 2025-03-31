@@ -16,7 +16,7 @@ static int dump_property(FILE *f, const char *label, uint32_t value, struct Fuji
 				return 0;
 			}
 		}
-		printf("Invalid value %x for %s\n", value, label);
+		fp_set_error("Invalid value %x for %s\n", value, label);
 		return -1;
 	}
 }
@@ -61,7 +61,7 @@ int fp_dump_struct(FILE *f, struct FujiProfile *fp) {
 
 static int validate_lookup(const char *str, uint32_t *out, struct FujiLookup *tbl) {
 	if (str == NULL) {
-		printf("validate_lookup has to handle NULL value\n");
+		fp_set_error("validate_lookup has to handle NULL value\n");
 		return -1;
 	}
 
@@ -123,9 +123,9 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 	} else if (!strcmp(key, "Sharpness")) {
 		return validate_lookup(value, &fp->Sharpness, fp_range);
 	} else if (!strcmp(key, "NoisReduction")) {
-		return validate_lookup(value, &fp->NoisReduction, fp_range);
+		return validate_lookup(value, &fp->NoisReduction, fp_noise_reduction);
 	} else if (!strcmp(key, "Clarity")) {
-		return validate_lookup(value, &fp->Clarity, fp_range);
+		return validate_lookup(value, &fp->Clarity, fp_clarity);
 	} else if (!strcmp(key, "TetherRAWConditonCode")) {
 		// TODO
 	} else if (!strcmp(key, "SourceFileName")) {
@@ -249,7 +249,7 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	xmlDoc *doc = xmlReadFile(path, NULL, 0);
 	if (doc == NULL) {
-		fprintf(stderr, "Could not parse file: %s\n", path);
+		fp_set_error("Could not parse file %s", path);
 		return -1;
 	}
 
@@ -266,13 +266,13 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	// For now, we will assume these properties will be in order
 	xmlAttr *property = root->properties;
 	if (property == NULL) {
-		printf("Expected properties in ConversionProfile\n");
+		fp_set_error("Expected properties in ConversionProfile\n");
 		return -1;
 	}
 	if (!strcmp((const char *)property->name, "application")) {
 		xmlChar *value = xmlNodeListGetString(root->doc, property->children, 1);
 		if (strcmp((const char *)value, "XRFC")) {
-			printf("application != XRFC\n");
+			fp_set_error("application != XRFC\n");
 			xmlFreeDoc(doc);
 			return -1;
 		}
@@ -280,7 +280,7 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	}
 	property = property->next;
 	if (property == NULL) {
-		printf("Expected another property in ConversionProfile");
+		fp_set_error("Expected another property in ConversionProfile");
 		return -1;
 	}
 	if (!strcmp((const char *)property->name, "version")) {
@@ -290,7 +290,7 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 		} else if (!strcmp((const char *)value, "1.12.0.0")) {
 			fp->profile_version = FP_FP2_VER;
 		} else {
-			printf("Profile version '%s' not supported.\n", (const char *)value);
+			fp_set_error("Profile version '%s' not supported.\n", (const char *)value);
 			xmlFreeDoc(doc);
 			return -1;
 		}
@@ -299,7 +299,7 @@ int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
 	
 	xmlNode *group = root->children->next;
 	if (strcmp((const char *)group->name, "PropertyGroup")) {
-		printf("Expected node 'PropertyGroup', not '%s'\n", (const char *)group->name);
+		fp_set_error("Expected node 'PropertyGroup', not '%s'\n", (const char *)group->name);
 		return -1;
 	}
 

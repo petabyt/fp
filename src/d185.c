@@ -204,7 +204,7 @@ int fp_create_d185(const struct FujiProfile *fp, uint8_t *bin, int len) {
 		uint32_t value;
 		int rc = get_prop(fp, i, &value);
 		if (rc) {
-			printf("Error packing property %d\n", i);
+			fp_set_error("Error packing property %d", i);
 			return rc;
 		}
 		of += write_u32(bin + of, value);
@@ -239,7 +239,7 @@ int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 		} else if (wchr >= 'A' && wchr <= 'F') {
 			iop_code += (char)wchr - 'A' + 10;
 		} else {
-			printf("Invalid char in IOPCode\n");
+			fp_set_error("Invalid char in IOPCode");
 			return -1;
 		}
 	}
@@ -257,7 +257,7 @@ int fp_parse_d185(const uint8_t *bin, int len, struct FujiProfile *fp) {
 		}
 		int rc = parse_prop(fp, i, value);
 		if (rc) {
-			printf("Error parsing property of value %x at index %d\n", value, i);
+			fp_set_error("Error parsing property of value %x at index %d", value, i);
 			return -1;
 		}
 	}

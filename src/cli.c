@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include "fp.h"
 
-int parse_fp_files(const char *folder_path) {
+int parse_fp_files(const char *folder_path, int expect) {
 	DIR *dir = opendir(folder_path);
 	if (!dir) {
 		printf("Can't open %s\n", folder_path);
@@ -20,7 +20,7 @@ int parse_fp_files(const char *folder_path) {
 			snprintf(file_path, sizeof(file_path), "%s/%s", folder_path, entry->d_name);
 			printf("Parsing %s\n", file_path);
 			int rc = fp_parse_fp1(file_path, &fp);
-			if (rc) return rc;
+			if (rc != expect) return -1;
 		}
 	}
 	closedir(dir);
@@ -95,9 +95,11 @@ int test_d185(void) {
 
 int test(void) {
 	int rc;
-	rc = parse_fp_files("fp1");
+	rc = parse_fp_files("fp1", 0);
 	if (rc) return rc;
-	rc = parse_fp_files("fp2");
+	rc = parse_fp_files("fp2", 0);
+	if (rc) return rc;
+	rc = parse_fp_files("fp1_fail", -1);
 	if (rc) return rc;
 	rc = test_d185();
 	if (rc) return rc;
@@ -107,6 +109,6 @@ int test(void) {
 
 int main(int argc, char **argv) {
 	int rc = test();
-	printf("rc: '%s'\n", fp_error_str);
+	printf("rc: %d '%s'\n", rc, fp_get_error());
 	return rc;
 }
