@@ -23,7 +23,7 @@ The data structure sent between X Raw Studio and the camera over PTP
 ### struct
 Intermediate C data structure created for this project for other software to modify
 
-- [x] XML to struct (libxml)
+- [x] XML to struct (patched ezxml)
 - [x] d185 to struct
 - [x] struct to d185
 - [ ] struct to XML (split out XML text)

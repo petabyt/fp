@@ -1,7 +1,10 @@
 // Copyright 2025 Daniel C
 #include <stdio.h>
 #include <string.h>
+#ifdef FP_LIBXML2
 #include <libxml/parser.h>
+#endif
+#include "ezxml.h"
 #include <stdlib.h>
 #include "fp.h"
 
@@ -201,33 +204,50 @@ static int parse_prop(struct FujiProfile *fp, const char *key, const char *value
 	return 0;
 }
 
-static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
-	xmlNode *cur = NULL;
-	for (cur = node; cur; cur = cur->next) {
-		if (cur->type != XML_ELEMENT_NODE) {
-			printf("Incorrect node type %d\n", cur->type);
-			return -1;
-		}
+int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
+	memset(fp, 0, sizeof(struct FujiProfile));
+	ezxml_t xml = ezxml_parse_file(path);
 
-		const char *name = (const char *)cur->name;
-		if (name == NULL) {
-			printf("Don't know how to handle node->name == NULL\n");
-			abort();
-		}
-		const char *value = NULL;
-		if (cur->children != NULL && cur->children->content != NULL) {
-			value = (const char *)cur->children->content;
-		}
+	if (strcmp(xml->name, "ConversionProfile") != 0) {
+		fp_set_error("Root XML node is not ConversionProfile");
+		return -1;
+	}
 
-		cur = cur->next;
-		if (cur == NULL) {
-			printf("Expected end tag node\n");
-			return -1;
-		}
+	const char *application = ezxml_attr(xml, "application");
+	if (application == NULL) return -1;
+	if (strcmp(application, "XRFC") != 0) return -1;
 
-		if (!strcmp(name, "RejectedValue")) {
-			printf("Skipping %s\n", name);
+	const char *version = ezxml_attr(xml, "version");
+	if (version == NULL) return -1;
+
+	if (!strcmp(version, "1.10.0.0") || !strcmp(version, "1.11.0.0")) {
+		fp->profile_version = FP_FP1_VER;
+	} else if (!strcmp(version, "1.12.0.0")) {
+		fp->profile_version = FP_FP2_VER;
+	} else {
+		fp_set_error("Profile version '%s' not supported.\n", version);
+		return -1;
+	}
+
+	ezxml_t group = xml->child;
+	if (group == NULL) return -1;
+	if (strcmp(group->name, "PropertyGroup") != 0) {
+		fp_set_error("Expected node 'PropertyGroup', not '%s'\n", group->name);
+		return -1;
+	}
+
+	ezxml_t prop_group = group->child;
+	if (prop_group == NULL) return -1;
+
+	for (ezxml_t prop = prop_group; prop != NULL; prop = prop->sibling) {
+		printf("Prop: %s\n", prop->name); 
+
+		if (!strcmp(prop->name, "RejectedValue")) {
+			printf("Skipping %s\n", prop->name);
 		} else {
+			const char *name = prop->name;
+			const char *value = prop->txt;
+			if (prop->flags & EZXML_SELFCLOSING) value = NULL;
 			int rc = parse_prop(fp, name, value);
 			if (rc) {
 				printf("Error parsing prop '%s' = '%s'\n", name, value);
@@ -235,82 +255,7 @@ static int parse_prop_group(struct FujiProfile *fp, xmlNode *node) {
 			}
 		}
 
-		// Don't care about property children for now
-		if (cur->children) {
-			xmlNode *tags = cur->children;
-			for (; tags; tags = tags->next) {
-				printf("%s\n", (const char *)tags->name);
-			}
-		}
 	}
+
 	return 0;
-}
-
-int fp_parse_fp1(const char *path, struct FujiProfile *fp) {
-	xmlDoc *doc = xmlReadFile(path, NULL, 0);
-	if (doc == NULL) {
-		fp_set_error("Could not parse file %s", path);
-		return -1;
-	}
-
-	xmlNode *root = xmlDocGetRootElement(doc);
-	if (root == NULL) {
-		xmlFreeDoc(doc);
-		return -1;
-	}
-
-	if (strcmp((const char *)root->name, "ConversionProfile") != 0) {
-		abort();
-	}
-
-	// For now, we will assume these properties will be in order
-	xmlAttr *property = root->properties;
-	if (property == NULL) {
-		fp_set_error("Expected properties in ConversionProfile\n");
-		return -1;
-	}
-	if (!strcmp((const char *)property->name, "application")) {
-		xmlChar *value = xmlNodeListGetString(root->doc, property->children, 1);
-		if (strcmp((const char *)value, "XRFC")) {
-			fp_set_error("application != XRFC\n");
-			xmlFreeDoc(doc);
-			return -1;
-		}
-		xmlFree(value);
-	}
-	property = property->next;
-	if (property == NULL) {
-		fp_set_error("Expected another property in ConversionProfile");
-		return -1;
-	}
-	if (!strcmp((const char *)property->name, "version")) {
-		xmlChar *value = xmlNodeListGetString(root->doc, property->children, 1);
-		if (!strcmp((const char *)value, "1.10.0.0") || !strcmp((const char *)value, "1.11.0.0")) {
-			fp->profile_version = FP_FP1_VER;
-		} else if (!strcmp((const char *)value, "1.12.0.0")) {
-			fp->profile_version = FP_FP2_VER;
-		} else {
-			fp_set_error("Profile version '%s' not supported.\n", (const char *)value);
-			xmlFreeDoc(doc);
-			return -1;
-		}
-		xmlFree(value);
-	}
-	
-	xmlNode *group = root->children->next;
-	if (strcmp((const char *)group->name, "PropertyGroup")) {
-		fp_set_error("Expected node 'PropertyGroup', not '%s'\n", (const char *)group->name);
-		return -1;
-	}
-
-	xmlNode *prop_group = group->children->next;
-
-	memset(fp, 0, sizeof(struct FujiProfile));
-
-	int rc = parse_prop_group(fp, prop_group);
-	if (rc) return rc;
-
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return 0;	
 }
